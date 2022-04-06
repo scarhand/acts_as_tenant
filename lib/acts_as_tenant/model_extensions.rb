@@ -71,25 +71,33 @@ module ActsAsTenant
         end
 
         # Dynamically generate the following methods:
-        # - Rewrite the accessors to make tenant immutable
-        # - Add an override to prevent unnecessary db hits
+        # - Rewrite the accessors to make tenant immutable (if the through option is not set)
+        # - Add an override to prevent unnecessary db hits (if the through option is not set)
+        # - Add an accessor to the current tenant (if the through option has been set)
         # - Add a helper method to verify if a model has been scoped by AaT
         to_include = Module.new {
-          define_method "#{fkey}=" do |integer|
-            write_attribute(fkey.to_s, integer)
-            raise ActsAsTenant::Errors::TenantIsImmutable if tenant_modified?
-            integer
-          end
+          if options[:through]
+            define_method "#{ActsAsTenant.tenant_klass}" do
+              ActsAsTenant.current_tenant
+            end
+          else
+            define_method "#{fkey}=" do |integer|
+              write_attribute(fkey.to_s, integer)
+              raise ActsAsTenant::Errors::TenantIsImmutable if tenant_modified?
+              integer
+            end
 
-          define_method "#{ActsAsTenant.tenant_klass}=" do |model|
-            super(model)
-            raise ActsAsTenant::Errors::TenantIsImmutable if tenant_modified?
-            model
-          end
+            define_method "#{ActsAsTenant.tenant_klass}=" do |model|
+              super(model)
+              raise ActsAsTenant::Errors::TenantIsImmutable if tenant_modified?
+              model
+            end
 
-          define_method "tenant_modified?" do
-            will_save_change_to_attribute?(fkey) && persisted? && attribute_in_database(fkey).present?
+            define_method "tenant_modified?" do
+              will_save_change_to_attribute?(fkey) && persisted? && attribute_in_database(fkey).present?
+            end
           end
+          
         }
         include to_include
 
