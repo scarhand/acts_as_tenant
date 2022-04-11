@@ -11,5 +11,8 @@ module ActsAsTenant
 
     class TenantIsImmutable < ActsAsTenant::Error
     end
+
+    class TenantIsUnassignable < ActsAsTenant::Error
+    end
   end
 end

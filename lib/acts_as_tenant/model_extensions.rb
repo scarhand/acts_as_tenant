@@ -80,6 +80,10 @@ module ActsAsTenant
             define_method "#{ActsAsTenant.tenant_klass}" do
               ActsAsTenant.current_tenant
             end
+
+            define_method "#{ActsAsTenant.tenant_klass}=" do |val|
+              raise ActsAsTenant::Errors::TenantIsUnassignable, "Tenant can not be assigned in many-to-many relationships"
+            end
           else
             define_method "#{fkey}=" do |integer|
               write_attribute(fkey.to_s, integer)
@@ -97,7 +101,6 @@ module ActsAsTenant
               will_save_change_to_attribute?(fkey) && persisted? && attribute_in_database(fkey).present?
             end
           end
-          
         }
         include to_include
 
