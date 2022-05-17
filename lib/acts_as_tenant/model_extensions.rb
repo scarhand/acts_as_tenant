@@ -47,7 +47,7 @@ module ActsAsTenant
             if options[:polymorphic]
               m.send("#{fkey}=".to_sym, ActsAsTenant.current_tenant.class.to_s) if m.send(fkey.to_s).nil?
               m.send("#{polymorphic_type}=".to_sym, ActsAsTenant.current_tenant.class.to_s) if m.send(polymorphic_type.to_s).nil?
-            else
+            elsif !options[:through]
               m.send "#{fkey}=".to_sym, ActsAsTenant.current_tenant.send(pkey)
             end
           end
